@@ -1,0 +1,12 @@
+venv/
+venv
+.venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.*
+secrets.toml
+/secrets.toml
+*.log
