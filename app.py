@@ -11,12 +11,14 @@ from analyzer import (
     analyze_document,
     analyze_document_ollama
 )
+from translations import TRANSLATIONS
 
+t = TRANSLATIONS["en"]
 
 # ── Page config ───────────────────────────────────────────────────────────────
 
 st.set_page_config(
-    page_title="Legal Doc Risk Analyzer",
+    page_title=t["page_title"],
     page_icon="⚖️",
     layout="centered",
 )
@@ -37,13 +39,13 @@ def risk_color(score: int) -> str:
 
 def risk_label(score: int) -> str:
     if score <= 25:
-        return "Low Risk"
+        return t["low_risk"]
     elif score <= 50:
-        return "Moderate Risk"
+        return t["moderate_risk"]
     elif score <= 75:
-        return "High Risk"
+        return t["high_risk"]
     else:
-        return "Critical Risk"
+        return t["critical_risk"]
 
 
 def risk_delta_color(score: int) -> str:
@@ -62,90 +64,72 @@ def load_sample_pdf(filename: str) -> bytes | None:
 # ── Sidebar — Sample PDFs ─────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.header("📂 Sample Documents")
-    st.markdown(
-        "Don't have a legal PDF handy? "
-        "Download one of these examples to test the analyzer:"
-    )
+    st.header(t["sample_docs_header"])
+    st.markdown(t["sample_docs_desc"])
 
     # Sample 1
     sample1_bytes = load_sample_pdf("sample_nda.pdf")
     if sample1_bytes:
         st.download_button(
-            label="⬇️ Safe Agreement",
+           label=t["safe_agreement"],
             data=sample1_bytes,
             file_name="sample_nda.pdf",
             mime="application/pdf",
             use_container_width=True,
-            help="A Non-Disclosure Agreement with several notable clauses",
+            help=t["safe_help"],
         )
     else:
-        st.caption("_sample_nda.pdf not found in sample_pdfs/_")
+        st.caption(t["sample_contract_missing"])
 
     # Sample 2
     sample2_bytes = load_sample_pdf("sample_contract.pdf")
     if sample2_bytes:
         st.download_button(
-            label="⬇️ Unsafe Agreement",
+            label=t["unsafe_agreement"],
             data=sample2_bytes,
             file_name="sample_contract.pdf",
             mime="application/pdf",
             use_container_width=True,
-            help="A software services contract with various risk clauses",
+           help=t["unsafe_help"],
         )
     else:
-        st.caption("_sample_contract.pdf not found in sample_pdfs/_")
+        st.caption(t["sample_nda_missing"])
 
     st.divider()
-    st.markdown(
-        """
-        **How it works**
-        1. Download a sample above (or use your own PDF)
-        2. Upload it using the file uploader
-        3. Click **Analyze** and wait a few seconds
-        4. Review the risk score, red flags, and summary
-
-        **Supported files:** PDF only (text-based)
-        """
-    )
-
+    st.markdown(t["how_it_works"])
 
 # ── Header ────────────────────────────────────────────────────────────────────
 
-st.title("⚖️ Legal Document Risk Analyzer")
-st.caption(
-    "Upload a contract, NDA, terms of service, or any legal PDF to "
-    "identify potential risks and red flags instantly."
-)
+st.title(t["title"])
+st.caption(t["caption"])
 st.divider()
 
 inference_mode = st.radio(
-    "Inference Mode",
+    t["inference_mode"],
     [
-        "Groq Cloud",
-        "Local Ollama"
+        t["groq_cloud"],
+        t["local_ollama"]
     ]
 )
-if inference_mode == "Groq Cloud":
+if inference_mode == t["groq_cloud"]:
 
     use_own_key = st.checkbox(
-        "Use my own Groq API key (BYOK)"
-    )
-
+    t["byok_checkbox"]
+)
     user_api_key = None
 
     if use_own_key:
-        user_api_key = st.text_input(
-            "Groq API Key",
-            type="password",
-            help="Your key is used only for this session."
-        )
+      user_api_key = st.text_input(
+    t["groq_api_key"],
+    type="password",
+    help=t["groq_api_help"]
+)
 else:
     user_api_key = None
 
-if inference_mode == "Local Ollama":
-    ollama_model = st.selectbox(
-        "Local Model",
+if inference_mode == t["local_ollama"]:
+    ollama_model =st.selectbox(
+    t["local_model"],
         [
             "llama3.2",
             "gemma3",
@@ -153,7 +137,7 @@ if inference_mode == "Local Ollama":
             "qwen3"
         ]
     )
-if inference_mode == "Groq Cloud":
+if inference_mode == t["groq_cloud"]:
     current_model = "☁️llama-3.3-70b-versatile (Cloud)"
 else:
     current_model = f"{ollama_model} (Local)"
@@ -161,44 +145,42 @@ else:
 st.markdown(
     f"""
 
-    **Current Model:** `🖥️{current_model}`
+    **{t["current_model"]}** `🖥️{current_model}`
     """
 )
-if inference_mode == "Groq Cloud":
-    st.success("☁️ Cloud AI Active")
+if inference_mode == t["groq_cloud"]:
+    st.success(t["cloud_active"])
 else:
-    st.success("🖥️ Local AI Active")
-
+    st.success(t["local_active"])
 
 # ── Upload ────────────────────────────────────────────────────────────────────
 
 uploaded_file = st.file_uploader(
-    "Upload your legal document (PDF)",
+    t["upload_label"],
     type=["pdf"],
-    help="Max recommended size: ~50 pages. Scanned/image PDFs may not work.",
+    help=t["upload_help"],
 )
-
 if uploaded_file:
     st.info(f"📄 **{uploaded_file.name}** — {uploaded_file.size / 1024:.1f} KB uploaded")
 
 analyze_btn = st.button(
-    "🔍 Analyze Document",
+    t["analyze_button"],
     type="primary",
     disabled=not uploaded_file,
     use_container_width=True,
 )
 
 if not uploaded_file:
-    st.info("Upload a PDF document above to get started, or download a sample from the sidebar.")
+   st.info(t["upload_info"])
 
 
 # ── Analysis & Results ────────────────────────────────────────────────────────
 
 if analyze_btn and uploaded_file:
-    with st.spinner("Reading document and consulting AI legal analyst…"):
+    with st.spinner(t["spinner"]):
         try:
             file_bytes = uploaded_file.read()
-            if inference_mode == "Groq Cloud":
+            if inference_mode == t["groq_cloud"]:
                 result = analyze_document(
                 file_bytes=file_bytes,
                 api_key=user_api_key
@@ -210,18 +192,18 @@ if analyze_btn and uploaded_file:
                 )
 
         except RuntimeError as e:
-            st.error(f"**Configuration Error:** {e}")
+            st.error(f"**{t['configuration_error']}:** {e}")
             st.stop()
         except ValueError as e:
-            st.error(f"**Document Error:** {e}")
+            st.error(f"**{t['document_error']}:** {e}")
             st.stop()
         except Exception as e:
-            st.error(f"**API Error:** {e}")
+            st.error(f"**{t['api_error']}:** {e}")
             st.stop()
 
     # ── Metrics row ──────────────────────────────────────────────────────────
     st.divider()
-    st.subheader("📊 Risk Assessment Results")
+    st.subheader(t["results_header"])
 
     score     = result["risk_score"]
     red_flags = result["red_flags"]
@@ -231,7 +213,7 @@ if analyze_btn and uploaded_file:
 
     with col1:
         st.metric(
-            label="Overall Risk Score",
+            label=t["overall_risk_score"],
             value=f"{score} / 100",
             delta=risk_label(score),
             delta_color=risk_delta_color(score),
@@ -239,15 +221,15 @@ if analyze_btn and uploaded_file:
 
     with col2:
         st.metric(
-            label="Severity",
+           label=t["severity"],
             value=f"{risk_color(score)} {risk_label(score)}",
         )
 
     with col3:
         st.metric(
-            label="Red Flags Found",
+            label=t["red_flags_found"],
             value=len(red_flags),
-            delta="issues identified",
+            delta=t["issues_identified"],
             delta_color="off",
         )
 
@@ -255,24 +237,29 @@ if analyze_btn and uploaded_file:
     st.progress(score / 100)
 
     # ── Summary ──────────────────────────────────────────────────────────────
-    st.subheader("📝 Document Summary")
+    st.subheader(t["summary_header"])
     st.info(summary)
 
     # ── Red flags ────────────────────────────────────────────────────────────
-    st.subheader(f"🚩 Red Flags ({len(red_flags)} found)")
+    st.subheader(
+    f"{t['red_flags_header']} ({len(red_flags)} found)"
+)
 
     if not red_flags:
-        st.success("No significant red flags were identified in this document.")
+        st.success(t["no_red_flags"])
     else:
         for i, flag in enumerate(red_flags, start=1):
             st.warning(f"**{i}.** {flag}")
 
     # ── Raw JSON expander ────────────────────────────────────────────────────
-    with st.expander("🔧 Raw JSON Response"):
+    with st.expander(t["raw_json"]):
         st.json(result)
 
     st.divider()
-    st.caption(
-        "⚠️ This tool is for informational purposes only and does not "
-        "constitute legal advice. Consult a qualified attorney for legal guidance."
+    st.caption(t["legal_disclaimer"])
+    st.info(
+    t["upload_success"].format(
+        name=uploaded_file.name,
+        size=uploaded_file.size / 1024
     )
+)
