@@ -23,6 +23,8 @@ TRANSLATIONS = {
 3. Click **Analyze** and wait a few seconds
 4. Review the risk score, red flags, and summary
 
+**Model:** `llama-3.3-70b-versatile`
+
 **Supported files:** PDF only (text-based)
 """,
 
@@ -93,5 +95,6 @@ TRANSLATIONS = {
         "current_model": "Current Model:",
         "cloud_active": "☁️ Cloud AI Active",
         "local_active": "🖥️ Local AI Active",
+        "upload_success": "📄 **{name}** — {size:.1f} KB uploaded",
     }
 }

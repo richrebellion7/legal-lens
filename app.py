@@ -111,20 +111,19 @@ inference_mode = st.radio(
         t["local_ollama"]
     ]
 )
-if inference_mode == "Groq Cloud":
+if inference_mode == t["groq_cloud"]:
 
     use_own_key = st.checkbox(
-        "Use my own Groq API key (BYOK)"
-    )
-
+    t["byok_checkbox"]
+)
     user_api_key = None
 
     if use_own_key:
-        user_api_key = st.text_input(
-            "Groq API Key",
-            type="password",
-            help="Your key is used only for this session."
-        )
+      user_api_key = st.text_input(
+    t["groq_api_key"],
+    type="password",
+    help=t["groq_api_help"]
+)
 else:
     user_api_key = None
 
@@ -138,7 +137,7 @@ if inference_mode == t["local_ollama"]:
             "qwen3"
         ]
     )
-if inference_mode == "Groq Cloud":
+if inference_mode == t["groq_cloud"]:
     current_model = "☁️llama-3.3-70b-versatile (Cloud)"
 else:
     current_model = f"{ollama_model} (Local)"
@@ -146,14 +145,13 @@ else:
 st.markdown(
     f"""
 
-    **Current Model:** `🖥️{current_model}`
+    **{t["current_model"]}** `🖥️{current_model}`
     """
 )
-if inference_mode == "Groq Cloud":
-    st.success("☁️ Cloud AI Active")
+if inference_mode == t["groq_cloud"]:
+    st.success(t["cloud_active"])
 else:
-    st.success("🖥️ Local AI Active")
-
+    st.success(t["local_active"])
 
 # ── Upload ────────────────────────────────────────────────────────────────────
 
@@ -182,7 +180,7 @@ if analyze_btn and uploaded_file:
     with st.spinner(t["spinner"]):
         try:
             file_bytes = uploaded_file.read()
-            if inference_mode == "Groq Cloud":
+            if inference_mode == t["groq_cloud"]:
                 result = analyze_document(
                 file_bytes=file_bytes,
                 api_key=user_api_key
@@ -259,3 +257,9 @@ if analyze_btn and uploaded_file:
 
     st.divider()
     st.caption(t["legal_disclaimer"])
+    st.info(
+    t["upload_success"].format(
+        name=uploaded_file.name,
+        size=uploaded_file.size / 1024
+    )
+)
