@@ -13,15 +13,30 @@ from analyzer import (
 )
 from translations import TRANSLATIONS
 
-t = TRANSLATIONS["en"]
-
 # ── Page config ───────────────────────────────────────────────────────────────
 
 st.set_page_config(
-    page_title=t["page_title"],
+    page_title="Legal Lens AI",
     page_icon="⚖️",
     layout="centered",
 )
+
+LANGUAGES = {
+    "English": "en",
+    "اردو": "ur",
+    "తెలుగు": "te"
+}
+
+with st.sidebar:
+    lang = st.selectbox(
+        "Language",
+        list(LANGUAGES.keys()),
+        key="language_selector"
+    )
+
+lang_code = LANGUAGES[lang]
+
+t = TRANSLATIONS[lang_code]
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
