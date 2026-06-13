@@ -23,8 +23,6 @@ TRANSLATIONS = {
 3. Click **Analyze** and wait a few seconds
 4. Review the risk score, red flags, and summary
 
-**Model:** `llama-3.3-70b-versatile`
-
 **Supported files:** PDF only (text-based)
 """,
 
