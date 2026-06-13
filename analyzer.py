@@ -51,6 +51,8 @@ SYSTEM_PROMPT = """You are an expert legal document analyst specializing in risk
 Analyze the provided legal document text and identify potential risks, red flags, and concerns.
 
 You MUST respond with ONLY valid JSON in this exact format (no markdown, no extra text):
+
+The summary field and all red_flags entries MUST be written in {language}.
 {
   "risk_score": <integer 0-100>,
   "red_flags": [
@@ -81,12 +83,18 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
             pages_text.append(text)
     return "\n\n".join(pages_text)
 
+LANGUAGE_NAMES = {
+    "en": "English",
+    "ur": "Urdu",
+    "te": "Telugu"
+}
 
-# ── LLM call ──────────────────────────────────────────────────────────────────
+
 
 def analyze_document(
     file_bytes: bytes,
-    api_key=None
+    api_key=None,
+    language = "English"
 ) -> dict:
     api_key = get_api_key(api_key)
     # 1. Extract text
@@ -101,12 +109,15 @@ def analyze_document(
     if len(document_text) > max_chars:
         document_text = document_text[:max_chars] + "\n\n[Document truncated for analysis]"
 
-    # 2. Call Groq
+    system_prompt = SYSTEM_PROMPT.replace(
+    "{language}",
+    language
+)
     client = Groq(api_key=api_key)
     chat_completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": system_prompt},
             {
                 "role": "user",
                 "content": (
@@ -138,7 +149,8 @@ def analyze_document(
 
 def analyze_document_ollama(
     file_bytes: bytes,
-    model: str = "llama3.2"
+    model: str = "llama3.2",
+    language = "English"
 ):
     document_text = extract_text_from_pdf(file_bytes)
 
@@ -146,13 +158,18 @@ def analyze_document_ollama(
         raise ValueError(
             "Could not extract any text from this PDF."
         )
+    
+    system_prompt = SYSTEM_PROMPT.replace(
+    "{language}",
+    language
+)
 
     response = ollama.chat(
     model=model,
     messages=[
         {
             "role": "system",
-            "content": SYSTEM_PROMPT
+            "content": system_prompt
         },
         {
             "role": "user",

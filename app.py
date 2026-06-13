@@ -27,6 +27,12 @@ LANGUAGES = {
     "తెలుగు": "te"
 }
 
+LANGUAGE_NAMES = {
+    "English": "English",
+    "اردو": "Urdu",
+    "తెలుగు": "Telugu"
+}
+
 with st.sidebar:
     lang = st.selectbox(
         "Language",
@@ -37,6 +43,8 @@ with st.sidebar:
 lang_code = LANGUAGES[lang]
 
 t = TRANSLATIONS[lang_code]
+
+language_name = LANGUAGE_NAMES[lang]
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -198,12 +206,14 @@ if analyze_btn and uploaded_file:
             if inference_mode == t["groq_cloud"]:
                 result = analyze_document(
                 file_bytes=file_bytes,
-                api_key=user_api_key
+                api_key=user_api_key,
+                language=LANGUAGE_NAMES[lang]
                 )
             else:
                 result = analyze_document_ollama(
                     file_bytes=file_bytes,
-                    model=ollama_model
+                    model=ollama_model,
+                    language=LANGUAGE_NAMES[lang]
                 )
 
         except RuntimeError as e:
