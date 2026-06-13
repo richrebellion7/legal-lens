@@ -23,13 +23,11 @@ load_dotenv()
 
 # ── API key helper ─────────────────────────────────────────────────────────────
 
-def get_api_key() -> str:
-    """
-    Return the Groq API key.
-    Tries Streamlit secrets first, falls back to environment variable.
-    Raises RuntimeError if neither is available.
-    """
-    # Try Streamlit secrets (works on Streamlit Cloud and locally via secrets.toml)
+def get_api_key(user_api_key=None):
+
+    if user_api_key and user_api_key.strip():
+        return user_api_key.strip()
+
     try:
         import streamlit as st
         key = st.secrets.get("GROQ_API_KEY", "")
@@ -38,14 +36,12 @@ def get_api_key() -> str:
     except Exception:
         pass
 
-    # Fall back to environment variable (local .env)
     key = os.getenv("GROQ_API_KEY", "")
     if key:
         return key
 
     raise RuntimeError(
-        "GROQ_API_KEY not found. "
-        "Add it to .streamlit/secrets.toml (local) or Streamlit Cloud secrets."
+        "No Groq API key available."
     )
 
 
@@ -88,23 +84,11 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
 
 # ── LLM call ──────────────────────────────────────────────────────────────────
 
-def analyze_document(file_bytes: bytes) -> dict:
-    """
-    Main entry point.
-
-    Args:
-        file_bytes: Raw bytes of the uploaded PDF.
-
-    Returns:
-        dict with keys: risk_score (int), red_flags (list[str]), summary (str)
-
-    Raises:
-        ValueError:   If text extraction fails or the LLM returns malformed JSON.
-        RuntimeError: If the API key is missing.
-        Exception:    Propagates Groq API errors as-is.
-    """
-    api_key = get_api_key()
-
+def analyze_document(
+    file_bytes: bytes,
+    api_key=None
+) -> dict:
+    api_key = get_api_key(api_key)
     # 1. Extract text
     document_text = extract_text_from_pdf(file_bytes)
     if not document_text.strip():
@@ -112,8 +96,7 @@ def analyze_document(file_bytes: bytes) -> dict:
             "Could not extract any text from this PDF. "
             "It may be scanned or image-based."
         )
-
-    # Truncate to avoid token limits (~12 000 words ≈ 16 000 tokens)
+    
     max_chars = 48_000
     if len(document_text) > max_chars:
         document_text = document_text[:max_chars] + "\n\n[Document truncated for analysis]"

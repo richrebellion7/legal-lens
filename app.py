@@ -105,8 +105,6 @@ with st.sidebar:
         3. Click **Analyze** and wait a few seconds
         4. Review the risk score, red flags, and summary
 
-        **Model:** `llama-3.3-70b-versatile`
-
         **Supported files:** PDF only (text-based)
         """
     )
@@ -128,6 +126,22 @@ inference_mode = st.radio(
         "Local Ollama"
     ]
 )
+if inference_mode == "Groq Cloud":
+
+    use_own_key = st.checkbox(
+        "Use my own Groq API key (BYOK)"
+    )
+
+    user_api_key = None
+
+    if use_own_key:
+        user_api_key = st.text_input(
+            "Groq API Key",
+            type="password",
+            help="Your key is used only for this session."
+        )
+else:
+    user_api_key = None
 
 if inference_mode == "Local Ollama":
     ollama_model = st.selectbox(
@@ -139,6 +153,21 @@ if inference_mode == "Local Ollama":
             "qwen3"
         ]
     )
+if inference_mode == "Groq Cloud":
+    current_model = "☁️llama-3.3-70b-versatile (Cloud)"
+else:
+    current_model = f"{ollama_model} (Local)"
+
+st.markdown(
+    f"""
+
+    **Current Model:** `🖥️{current_model}`
+    """
+)
+if inference_mode == "Groq Cloud":
+    st.success("☁️ Cloud AI Active")
+else:
+    st.success("🖥️ Local AI Active")
 
 
 # ── Upload ────────────────────────────────────────────────────────────────────
@@ -171,7 +200,8 @@ if analyze_btn and uploaded_file:
             file_bytes = uploaded_file.read()
             if inference_mode == "Groq Cloud":
                 result = analyze_document(
-                file_bytes=file_bytes
+                file_bytes=file_bytes,
+                api_key=user_api_key
                 )
             else:
                 result = analyze_document_ollama(
