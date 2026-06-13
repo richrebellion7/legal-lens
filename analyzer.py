@@ -165,22 +165,26 @@ def analyze_document_ollama(
         )
 
     response = ollama.chat(
-        model=model,
-        messages=[
-            {
-                "role": "system",
-                "content": SYSTEM_PROMPT
-            },
-            {
-                "role": "user",
-                "content": (
-                    "Please analyze the following legal document "
-                    "and return ONLY JSON:\n\n"
-                    + document_text[:48000]
-                )
-            }
-        ]
-    )
+    model=model,
+    messages=[
+        {
+            "role": "system",
+            "content": SYSTEM_PROMPT
+        },
+        {
+            "role": "user",
+            "content": (
+                "Please analyze the following legal document "
+                "and return ONLY JSON:\n\n"
+                + document_text[:48000]
+            )
+        }
+    ],
+    format="json",
+    options={
+        "num_predict": 2048
+    }
+)
 
     raw_response = response["message"]["content"]
 
